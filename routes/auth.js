@@ -5,6 +5,9 @@ const ky = require('ky-universal');
 const jwt = require('jsonwebtoken');
 const uidgenerator = require('uid-generator');
 const uidgen = new uidgenerator();
+require('dotenv').config();
+
+const User = require('../models/User');
 
 const oauth2 = {
   client: {
@@ -17,7 +20,6 @@ const oauth2 = {
     callback: 'http://localhost:5000/auth/callback'
   }
 }
-
 
 // redirect user to authorize screen
 const login = async (req, res) => {
@@ -53,50 +55,64 @@ const callback = async (req, res) => {
   }
 
   const code = req.query.code;
-  console.log(`Code: ${code}`);
 
   try {
     const response = await ky.post(`${oauth2.path.token}?client_id=${oauth2.client.id}&client_secret=${oauth2.client.secret}&code=${code}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(oauth2.path.callback)}`, { headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}}).json();
-    console.log(`Access token: ${response.access_token}`);
 
-    const token = await uidgen.generate();
-    const jwt_token = jwt.sign({
-      token: token,
-      user_name: 'thefyrewire',
-      user_id: '48745558',
-      level: 'admin',
-    }, process.env.JWT_SECRET, { expiresIn: '12h', issuer: process.env.JWT_ISSUER });
+    const { data } = await ky.get('https://api.twitch.tv/helix/users', {
+      headers: {
+        'Authorization': `Bearer ${response.access_token}`,
+        'Client-ID': process.env.CLIENT_ID
+      }
+    }).json();
 
-    console.log(`Token: ${token}`);
-    console.log(`JWT: ${jwt_token}`);
+    if (data.length <= 0) throw new Error('User does not exist');
+
+    const profile = data[0];
+
+    const userData = {
+      user_name: profile.display_name,
+      user_id: profile.id,
+      level: process.env.ADMINS.split(',').map(u => u.toLowerCase()).indexOf(profile.display_name.toLowerCase()) !== -1 ? 'admin' : 'user',
+      api_token: await uidgen.generate()
+    }
+
+    const userExists = await User.find({ user_id: profile.id });
+    
+    // if user exists, update api_token and updated_at
+    if (userExists.length > 0) {
+      const _id = userExists[0]._id;
+      console.log(`User: ${userData.user_name} already exists, updating...`);
+      await User.findByIdAndUpdate(_id, { ...userData, updated_at: Date.now() });
+      userData.id = _id;
+
+    // otherwise create a new user with new ID
+    } else {
+      const user = new User({
+        ...userData,
+        created_at: Date.now(),
+        updated_at: Date.now()
+      });
+
+      const userSaved = await user.save();
+      userData.id = userSaved._id;
+      console.log(`New user: ${userData.user_name} saved!`);
+      console.log(userSaved);
+    }
+
+    const jwt_token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '12h', issuer: process.env.JWT_ISSUER });
 
     res.cookie('token', jwt_token, { secure: false, httpOnly: true }); // set secure to true when on HTTPS
     res.redirect(next);
 
   } catch (error) {
-    console.log(`Access token error: ${error.message}`);
+    console.log(`Auth error: ${error.message}`);
     res.redirect('http://localhost:3000?error=Unauthorised-BadAuth');
-  }
-}
-
-// validate JWT token in cookie
-const me = (req, res) => {
-  const { token } = req.cookies;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.statusCode = 200;
-    res.json({ authenticated: true, user: { name: decoded.user_name, id: decoded.user_id, level: decoded.level } });
-
-  } catch (error) {
-    console.error(error.message);
-    res.statusCode = 401;
-    res.json({ authenticated: false, user: null });
   }
 }
 
 router.get('/login', login);
 router.get('/callback', callback);
 router.get('/logout', logout);
-router.get('/me', me);
 
 module.exports = router;

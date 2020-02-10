@@ -7,8 +7,9 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
 const auth = require('./routes/auth');
-require('dotenv').config();
+const users = require('./routes/api/users');
 
+require('dotenv').config();
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
@@ -23,7 +24,7 @@ io.on('connection', (socket) => {
 // connect to MongoDB and start server
 (async () => {
   try {
-    const connected = await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    const connected = await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
     console.log('Connected to MongoDB...');
   } catch (err) {
     console.log(err);
@@ -39,3 +40,4 @@ app.use('/css', express.static(__dirname + '/public/css/'));
 
 // use routes
 app.use('/auth', auth);
+app.use('/api/users', users);
