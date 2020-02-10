@@ -3,12 +3,14 @@ const app = express();
 const http = require('http').createServer(app);
 const path = require('path');
 const io = require('socket.io')(http);
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
 const routes = require('./routes');
 
 require('dotenv').config();
+app.use(bodyParser.json());
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
