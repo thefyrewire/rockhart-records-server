@@ -6,8 +6,7 @@ const io = require('socket.io')(http);
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
-const auth = require('./routes/auth');
-const users = require('./routes/api/users');
+const routes = require('./routes');
 
 require('dotenv').config();
 app.use(cookieParser());
@@ -39,5 +38,4 @@ io.on('connection', (socket) => {
 app.use('/css', express.static(__dirname + '/public/css/'));
 
 // use routes
-app.use('/auth', auth);
-app.use('/api/users', users);
+app.use(routes);
