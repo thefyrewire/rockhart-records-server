@@ -3,6 +3,7 @@ const router = express.Router();
 
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const { body } = require('express-validator');
 
 const Record = require('../../models/Record');
 
@@ -41,7 +42,16 @@ const postRecord = async (req, res) => {
   }
 }
 
-// router.get('/', getRecords);
-router.post('/', postRecord);
+router.get('/', getRecords);
+router.post('/', [
+  body('*').trim(),
+  body('name').notEmpty(),
+  body('artist').notEmpty(),
+  body('album_art').notEmpty().isURL({ protocols: ['http', 'https'] }),
+  body('spotify_url').isURL({ protocols: ['http', 'https'] }),
+  body('purchase_url').isURL({ protocols: ['http', 'https'] }),
+  body('created_at').isISO8601(),
+  body('updated_at').isISO8601()
+], postRecord);
 
 module.exports = router;
