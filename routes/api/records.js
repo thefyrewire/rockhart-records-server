@@ -10,10 +10,10 @@ const Record = require('../../models/Record');
 const getRecords = async (req, res) => {
   try {
     const records = await Record.find();
-    res.json({ records });
+    return res.json({ records });
 
   } catch (error) {
-    res.sendStatus(500);
+    return res.sendStatus(500);
   }
 }
 
@@ -25,7 +25,7 @@ const postRecord = async (req, res) => {
 
   } catch (error) {
     console.log(error.message);
-    res.sendStatus(401);
+    return res.sendStatus(401);
   }
 
   try {
@@ -44,11 +44,11 @@ const postRecord = async (req, res) => {
     const recordSaved = await record.save();
     console.log(`New record added to catalog: ${name} by ${artist}`);
     console.log(recordSaved);
-    res.json(recordSaved.toJSON());
+    return res.json(recordSaved.toJSON());
 
   } catch (error) {
     console.log(error.message);
-    res.sendStatus(400);
+    return res.sendStatus(400);
   }
 }
 
