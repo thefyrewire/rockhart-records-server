@@ -7,6 +7,16 @@ const { body } = require('express-validator');
 
 const Record = require('../../models/Record');
 
+const getRecords = async (req, res) => {
+  try {
+    const records = await Record.find();
+    res.json({ records });
+
+  } catch (error) {
+    res.sendStatus(500);
+  }
+}
+
 const postRecord = async (req, res) => {
   const { token } = req.cookies;
 
