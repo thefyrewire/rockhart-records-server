@@ -44,7 +44,7 @@ const postRecord = async (req, res) => {
     const recordSaved = await record.save();
     console.log(`New record added to catalog: ${name} by ${artist}`);
     console.log(recordSaved);
-    return res.json(recordSaved.toJSON());
+    return res.json({ record: recordSaved.toJSON() });
 
   } catch (error) {
     console.log(error.message);
