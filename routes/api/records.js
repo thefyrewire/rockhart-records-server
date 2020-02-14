@@ -88,6 +88,32 @@ const putRecord = async (req, res) => {
   }
 }
 
+const deleteRecord = async (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const { id } = req.params;
+
+    const recordDeleted = await Record.findByIdAndDelete(id);
+    console.log(`Record with ID ${id} deleted: ${recordDeleted.name} by ${recordDeleted.artist}`);
+    console.log(recordDeleted);
+    return res.json({ record: recordDeleted.toJSON() });
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 const recordValidation = [
   body('*').trim(),
   body('name').notEmpty(),
@@ -102,5 +128,6 @@ const recordValidation = [
 router.get('/', getRecords);
 router.post('/', recordValidation, postRecord);
 router.put('/:id', recordValidation, putRecord);
+router.delete('/:id', deleteRecord);
 
 module.exports = router;
