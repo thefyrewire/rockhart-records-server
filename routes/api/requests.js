@@ -98,8 +98,8 @@ const promoteRequest = async (req, res) => {
 
 router.get('/', getRequests);
 router.post('/new/:id', postRequest);
-router.post('/promote/:id', promoteRequest);
-// router.delete('/:id', deleteRecord);
+router.put('/promote/:id', promoteRequest);
+router.delete('/:id', deleteRequest);
 
 // module.exports = router;
 module.exports = router;
