@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
 const routes = require('./routes');
+app.set('socketio', io);
 
 require('dotenv').config();
 app.use(bodyParser.json());
