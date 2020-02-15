@@ -10,11 +10,11 @@ const me = (req, res) => {
   const { token } = req.cookies;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return res.json(200, { authenticated: true, user: { id: decoded.id, user_name: decoded.user_name, user_id: decoded.user_id, level: decoded.level } });
+    return res.json({ authenticated: true, user: { id: decoded.id, user_name: decoded.user_name, user_id: decoded.user_id, level: decoded.level } });
 
   } catch (error) {
     console.error(error.message);
-    return res.json(401, { authenticated: false, user: null });
+    return res.status(401).json({ authenticated: false, user: null });
   }
 }
 
