@@ -4,9 +4,11 @@ const router = express.Router();
 const auth = require('./auth');
 const users = require('./api/users');
 const records = require('./api/records');
+const requests = require('./api/requests');
 
 router.use('/auth', auth);
 router.use('/api/users', users);
 router.use('/api/records', records);
+router.use('/api/requests', requests);
 
 module.exports = router;
