@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
   console.log('a user connected');
-  io.emit('connected');
+  io.sockets.emit('connected');
 });
 
 // connect to MongoDB and start server
