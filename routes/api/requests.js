@@ -18,9 +18,12 @@ const Requests = {
   },
   promote: function(id) {
     const index = this.queue.findIndex(request => request.id.toString() === id);
-    console.log(index);
     if (index === -1) return;
     this.queue.unshift(...this.queue.splice(index, 1));
+    return;
+  },
+  delete: function(id) {
+    this.queue = this.queue.filter(request => request.id.toString() !== id);
     return;
   }
 }
@@ -86,8 +89,33 @@ const promoteRequest = async (req, res) => {
     const io = req.app.get('socketio');
 
     Requests.promote(id);
-    console.log(Requests.queue);
     io.sockets.emit('promote-request', id);
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
+const deleteRequest = async (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const { id } = req.params;
+    const io = req.app.get('socketio');
+
+    Requests.delete(id);
+    io.sockets.emit('delete-request', id);
     return res.sendStatus(200);
 
   } catch (error) {
