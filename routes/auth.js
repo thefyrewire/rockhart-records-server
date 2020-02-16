@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const ky = require('ky-universal');
+const got = require('got');
 const jwt = require('jsonwebtoken');
 const uidgenerator = require('uid-generator');
 const uidgen = new uidgenerator();
@@ -57,9 +57,9 @@ const callback = async (req, res) => {
   const code = req.query.code;
 
   try {
-    const response = await ky.post(`${oauth2.path.token}?client_id=${oauth2.client.id}&client_secret=${oauth2.client.secret}&code=${code}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(oauth2.path.callback)}`, { headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}}).json();
+    const response = await got.post(`${oauth2.path.token}?client_id=${oauth2.client.id}&client_secret=${oauth2.client.secret}&code=${code}&grant_type=authorization_code&redirect_uri=${encodeURIComponent(oauth2.path.callback)}`).json();
 
-    const { data } = await ky.get('https://api.twitch.tv/helix/users', {
+    const { data } = await got.get('https://api.twitch.tv/helix/users', {
       headers: {
         'Authorization': `Bearer ${response.access_token}`,
         'Client-ID': process.env.CLIENT_ID
