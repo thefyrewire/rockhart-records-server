@@ -34,7 +34,10 @@ const Requests = {
 }
 
 const getRequests = (req, res) => {
-  res.json(Requests.queue);
+  res.json({
+    requests: Requests.queue,
+    current: Requests.current
+  });
 }
 
 const postRequest = async (req, res) => {
