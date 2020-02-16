@@ -14,7 +14,10 @@ const Requests = {
     return;
   },
   next: function() {
-    return this.queue.shift(); 
+    this.history = [...this.history, this.current].slice(0, 20);
+    this.current = this.queue.shift();
+    console.log(this.current);
+    return this.current;
   },
   promote: function(id) {
     const index = this.queue.findIndex(request => request.id.toString() === id);
@@ -25,7 +28,9 @@ const Requests = {
   delete: function(id) {
     this.queue = this.queue.filter(request => request.id.toString() !== id);
     return;
-  }
+  },
+  current: null,
+  history: []
 }
 
 const getRequests = (req, res) => {
@@ -124,10 +129,36 @@ const deleteRequest = async (req, res) => {
   }
 }
 
+const nextRequest = (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const io = req.app.get('socketio');
+
+    const request = Requests.next();
+    const history = Requests.history;
+    io.sockets.emit('next-request', { request, history });
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 router.get('/', getRequests);
 router.post('/new/:id', postRequest);
 router.put('/promote/:id', promoteRequest);
 router.delete('/:id', deleteRequest);
+router.put('/next', nextRequest);
 
-// module.exports = router;
 module.exports = router;
