@@ -16,7 +16,7 @@ const Requests = {
     return;
   },
   next: function() {
-    this.history = this.current ? [...this.history, this.current].slice(0, 20) : [];
+    this.history = this.current ? [...this.history, this.current].slice(0, 20) : this.history;
     this.current = { ...this.queue.shift(), updated_at: new Date().toISOString() };
     console.log(this.current);
     return this.current;
