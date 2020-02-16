@@ -18,11 +18,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-io.on('connection', (socket) => {
-  console.log('a user connected');
-  io.sockets.emit('connected');
-});
-
 // connect to MongoDB and start server
 (async () => {
   try {
@@ -31,6 +26,11 @@ io.on('connection', (socket) => {
   } catch (err) {
     console.log(err);
   }
+
+  io.on('connection', (socket) => {
+    console.log('a user connected');
+    io.sockets.emit('connected');
+  });
 
   http.listen(5000, () => {
     console.log('listening on *:5000');
