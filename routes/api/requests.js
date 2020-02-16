@@ -9,13 +9,15 @@ const Request = require('../../models/Request');
 
 const Requests = {
   queue: [],
+  current: null,
+  history: [],
   add: function(record) {
     this.queue.push(record);
     return;
   },
   next: function() {
-    this.history = [...this.history, this.current].slice(0, 20);
-    this.current = this.queue.shift();
+    this.history = this.current ? [...this.history, this.current].slice(0, 20) : [];
+    this.current = { ...this.queue.shift(), updated_at: new Date().toISOString() };
     console.log(this.current);
     return this.current;
   },
@@ -29,14 +31,19 @@ const Requests = {
     this.queue = this.queue.filter(request => request.id.toString() !== id);
     return;
   },
-  current: null,
-  history: []
+  clearCurrent: function() {
+    const current = this.current;
+    this.history = [...this.history, current].slice(0, 20);
+    this.current = null;
+    return current;
+  }
 }
 
 const getRequests = (req, res) => {
   res.json({
     requests: Requests.queue,
-    current: Requests.current
+    current: Requests.current,
+    history: Requests.history
   });
 }
 
@@ -158,10 +165,36 @@ const nextRequest = (req, res) => {
   }
 }
 
+const clearCurrentRequest = (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const io = req.app.get('socketio');
+
+    const request = Requests.clearCurrent();
+    io.sockets.emit('clear-current-request', request);
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 router.get('/', getRequests);
 router.post('/new/:id', postRequest);
 router.put('/promote/:id', promoteRequest);
 router.delete('/:id', deleteRequest);
 router.put('/next', nextRequest);
+router.put('/current/clear', clearCurrentRequest);
 
 module.exports = router;
