@@ -16,7 +16,9 @@ const Requests = {
     return;
   },
   next: function() {
-    this.history = this.current ? [...this.history, this.current].slice(0, 10) : this.history;
+    this.history = this.current
+      ? [...this.history, this.current].sort((a, b) => new Date(a.updated_at) < new Date(b.updated_at)).slice(0, 10)
+      : this.history;
     this.current = { ...this.queue.shift(), updated_at: new Date().toISOString() };
     console.log(this.current);
     return this.current;
@@ -33,7 +35,7 @@ const Requests = {
   },
   clearCurrent: function() {
     const current = this.current;
-    this.history = [...this.history, current].slice(0, 20);
+    this.history = [...this.history, current].sort((a, b) => new Date(a.updated_at) < new Date(b.updated_at)).slice(0, 20);
     this.current = null;
     return current;
   }
@@ -43,7 +45,7 @@ const getRequests = (req, res) => {
   res.json({
     requests: Requests.queue,
     current: Requests.current,
-    history: Requests.history
+    history: Requests.history.slice(0, 10)
   });
 }
 
