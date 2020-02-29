@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const Record = require('../../models/Record');
 const Request = require('../../models/Request');
+const Settings = require('../../models/Settings');
 
 const Requests = {
   queue: [],
@@ -38,6 +39,12 @@ const Requests = {
     this.history = [...this.history, current].sort((a, b) => new Date(a.updated_at) < new Date(b.updated_at)).slice(0, 20);
     this.current = null;
     return current;
+  },
+  has: function(record_id) {
+    return !!(this.queue.find(request => request.record.id.toString() === record_id));
+  },
+  byUser: function(user_id) {
+    return this.queue.filter(request => request.user.id === user_id).length;
   }
 }
 
@@ -65,6 +72,12 @@ const postRequest = async (req, res) => {
     const { id } = req.params;
     const io = req.app.get('socketio');
 
+    const settings = await Settings.findOne();
+    if (!settings.requests_enabled) throw new Error('Requests are disabled');
+    if (!settings.allow_duplicates && Requests.has(id)) throw new Error('Record already requested');
+    if (settings.max_user_requests !== 0 && Requests.byUser(user.id) >= settings.max_user_requests) throw new Error('Maximum user requests made');
+    if (settings.max_total_requests !== 0 && Requests.queue.length >= settings.max_total_requests) throw new Error('Maximum total requests made');
+
     const record = await Record.findById(id);
     if (!record) throw new Error();
 
@@ -85,7 +98,7 @@ const postRequest = async (req, res) => {
 
   } catch (error) {
     console.log(error.message);
-    return res.sendStatus(404);
+    return res.sendStatus(403);
   }
 }
 
