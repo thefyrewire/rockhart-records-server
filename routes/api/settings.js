@@ -28,13 +28,13 @@ const putSettings = async (req, res) => {
     if (level !== 'admin') throw new Error();
 
     const { setting } = req.body;
+    const io = req.app.get('socketio');
 
     const settingsUpdated = await Settings.findOneAndUpdate({}, setting, { new: true });
-    console.log(setting);
-
-    console.log('Updated setting');
     console.log(settingsUpdated);
-    return res.json(settingsUpdated.toJSON());
+    io.sockets.emit('update-settings', settingsUpdated.toJSON());
+    
+    return res.sendStatus(200);
 
   } catch (error) {
     console.log(error.message);
