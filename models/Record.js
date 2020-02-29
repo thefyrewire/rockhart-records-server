@@ -46,4 +46,4 @@ RecordSchema.set('toJSON', {
   }
 });
 
-module.exports = User = mongoose.model('record', RecordSchema);
+module.exports = Record = mongoose.model('record', RecordSchema);
