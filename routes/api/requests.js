@@ -41,7 +41,7 @@ const Requests = {
     return current;
   },
   has: function(record_id) {
-    return !!(this.queue.find(request => request.record.id.toString() === record_id));
+    return this.queue.findIndex(request => request.record.id.toString() === record_id) !== -1;
   },
   byUser: function(user_id) {
     return this.queue.filter(request => request.user.id === user_id).length;
