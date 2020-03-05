@@ -45,6 +45,10 @@ const Requests = {
   },
   byUser: function(user_id) {
     return this.queue.filter(request => request.user.id === user_id).length;
+  },
+  clearHistory: function() {
+    this.history = [];
+    return;
   }
 }
 
@@ -205,9 +209,35 @@ const clearCurrentRequest = (req, res) => {
   }
 }
 
+const deleteHistory = (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const io = req.app.get('socketio');
+
+    const request = Requests.clearHistory();
+    io.sockets.emit('clear-history');
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 router.get('/', getRequests);
 router.post('/new/:id', postRequest);
 router.put('/promote/:id', promoteRequest);
+router.delete('/history', deleteHistory);
 router.delete('/:id', deleteRequest);
 router.put('/next', nextRequest);
 router.put('/current/clear', clearCurrentRequest);
