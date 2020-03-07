@@ -171,6 +171,8 @@ const nextRequest = (req, res) => {
   }
 
   try {
+    if (Requests.queue.length === 0) throw new Error();
+
     const io = req.app.get('socketio');
 
     const request = Requests.next();
@@ -197,6 +199,8 @@ const clearCurrentRequest = (req, res) => {
   }
 
   try {
+    if (!Requests.current) throw new Error();
+    
     const io = req.app.get('socketio');
 
     const request = Requests.clearCurrent();
@@ -234,12 +238,59 @@ const deleteHistory = (req, res) => {
   }
 }
 
+const nextRequestStreamdeck = (req, res) => {
+  const { token } = req.query;
+
+  if (token !== process.env.STREAMDECK_TOKEN) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    if (Requests.queue.length === 0) throw new Error();
+
+    const io = req.app.get('socketio');
+
+    const request = Requests.next();
+    const history = Requests.history;
+    io.sockets.emit('next-request', { request, history });
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
+const clearCurrentRequestStreamdeck = (req, res) => {
+  const { token } = req.query;
+
+  if (token !== process.env.STREAMDECK_TOKEN) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    if (!Requests.current) throw new Error();
+
+    const io = req.app.get('socketio');
+
+    const request = Requests.clearCurrent();
+    io.sockets.emit('clear-current-request', request);
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 router.get('/', getRequests);
 router.post('/new/:id', postRequest);
 router.put('/promote/:id', promoteRequest);
 router.delete('/history', deleteHistory);
 router.delete('/:id', deleteRequest);
 router.put('/next', nextRequest);
+router.get('/next', nextRequestStreamdeck);
 router.put('/current/clear', clearCurrentRequest);
+router.get('/current/clear', clearCurrentRequestStreamdeck);
 
 module.exports = router;
