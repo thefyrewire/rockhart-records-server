@@ -12,6 +12,11 @@ const SettingsSchema = new Schema({
     required: true,
     default: false
   },
+  stream_safe_only: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
   max_user_requests: {
     type: Number,
     required: true,
@@ -29,6 +34,7 @@ SettingsSchema.set('toJSON', {
     const retJSON = {
       requests_enabled: ret.requests_enabled,
       allow_duplicates: ret.allow_duplicates,
+      stream_safe_only: ret.stream_safe_only,
       max_user_requests: ret.max_user_requests,
       max_total_requests: ret.max_total_requests
     }

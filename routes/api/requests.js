@@ -49,6 +49,10 @@ const Requests = {
   clearHistory: function() {
     this.history = [];
     return;
+  },
+  clearUnsafe: function() {
+    this.queue = this.queue.filter(request => request.record.stream_safe);
+    return;
   }
 }
 
@@ -238,6 +242,31 @@ const deleteHistory = (req, res) => {
   }
 }
 
+const deleteUnsafe = (req, res) => {
+  const { token } = req.cookies;
+
+  try {
+    const { level } = jwt.verify(token, process.env.JWT_SECRET);
+    if (level !== 'admin') throw new Error();
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(401);
+  }
+
+  try {
+    const io = req.app.get('socketio');
+
+    const request = Requests.clearUnsafe();
+    io.sockets.emit('clear-unsafe');
+    return res.sendStatus(200);
+
+  } catch (error) {
+    console.log(error.message);
+    return res.sendStatus(400);
+  }
+}
+
 const nextRequestStreamdeck = (req, res) => {
   const { token } = req.query;
 
@@ -292,5 +321,6 @@ router.put('/next', nextRequest);
 router.get('/next', nextRequestStreamdeck);
 router.put('/current/clear', clearCurrentRequest);
 router.get('/current/clear', clearCurrentRequestStreamdeck);
+router.post('/unsafe', deleteUnsafe);
 
 module.exports = router;

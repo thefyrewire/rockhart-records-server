@@ -30,7 +30,7 @@ const postRecord = async (req, res) => {
   }
 
   try {
-    const { name, artist, album_art, spotify_url, purchase_url } = req.body;
+    const { name, artist, album_art, spotify_url, purchase_url, stream_safe } = req.body;
 
     const record = new Record({
       name,
@@ -38,6 +38,7 @@ const postRecord = async (req, res) => {
       album_art,
       spotify_url: spotify_url || null,
       purchase_url: purchase_url || null,
+      stream_safe,
       created_at: Date.now(),
       updated_at: Date.now()
     });
@@ -67,7 +68,7 @@ const putRecord = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { name, artist, album_art, spotify_url, purchase_url } = req.body;
+    const { name, artist, album_art, spotify_url, purchase_url, stream_safe } = req.body;
 
     const recordUpdated = await Record.findByIdAndUpdate(id , {
       name,
@@ -75,6 +76,7 @@ const putRecord = async (req, res) => {
       album_art,
       spotify_url: spotify_url || null,
       purchase_url: purchase_url || null,
+      stream_safe,
       updated_at: Date.now()
     }, { new: true });
 
@@ -121,6 +123,7 @@ const recordValidation = [
   body('album_art').notEmpty().isURL({ protocols: ['http', 'https'] }),
   body('spotify_url').isURL({ protocols: ['http', 'https'] }),
   body('purchase_url').isURL({ protocols: ['http', 'https'] }),
+  body('stream_safe').isBoolean(),
   body('created_at').isISO8601(),
   body('updated_at').isISO8601()
 ];

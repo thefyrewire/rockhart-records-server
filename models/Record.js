@@ -20,6 +20,11 @@ const RecordSchema = new Schema({
   purchase_url: {
     type: String
   },
+  stream_safe: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
   created_at: {
     type: Date,
     required: true
@@ -39,6 +44,7 @@ RecordSchema.set('toJSON', {
       album_art: ret.album_art,
       spotify_url: ret.spotify_url,
       purchase_url: ret.purchase_url,
+      stream_safe: ret.stream_safe,
       created_at: ret.created_at,
       updated_at: ret.updated_at
     }
